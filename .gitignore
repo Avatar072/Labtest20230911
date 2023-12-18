@@ -1,0 +1,8 @@
+# 忽略所有 .csv 文件
+*.csv
+# 忽略所有 .txt 文件
+*.txt
+# 忽略所有 .rar 文件
+*.rar
+# 忽略"data" 資料夾下所有csv文件
+/data/*.csv
