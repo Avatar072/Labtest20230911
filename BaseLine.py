@@ -49,9 +49,9 @@ generatefolder(f"./single_AnalyseReportFolder/", today)
 generatefolder(f"./single_AnalyseReportFolder/{today}/", client_str)
 generatefolder(f"./single_AnalyseReportFolder/{today}/{client_str}/", Choose_method)
 
-# 20231220 after do labelencode and minmax
-x_test = np.load(filepath + "x_test_ToN-IoT_20231220.npy", allow_pickle=True)
-y_test = np.load(filepath + "y_test_ToN-IoT_20231220.npy", allow_pickle=True)
+# # 20231220 after do labelencode and minmax
+# x_test = np.load(filepath + "x_test_ToN-IoT_20231220.npy", allow_pickle=True)
+# y_test = np.load(filepath + "y_test_ToN-IoT_20231220.npy", allow_pickle=True)
 
 # 20231220 UNSW-ToN-IoT after PCA do labelencode and minmax
 # x_test = np.load(filepath + "x_test_ToN-IoT_afterPCA_20231220.npy", allow_pickle=True)
@@ -65,6 +65,11 @@ y_test = np.load(filepath + "y_test_ToN-IoT_20231220.npy", allow_pickle=True)
 # x_test = np.load(filepath + "x_test_CIC_ToN-IoT_20231225.npy", allow_pickle=True)
 # y_test = np.load(filepath + "y_test_CIC_ToN-IoT_20231225.npy", allow_pickle=True)
 # x_test, y_test = ChooseTestDataSet(filepath)
+
+# 20231220 after do labelencode and minmax
+x_test = np.load(filepath + "x_test_ToN-IoT_20240111.npy", allow_pickle=True)
+y_test = np.load(filepath + "y_test_ToN-IoT_20240111.npy", allow_pickle=True)
+
 counter = Counter(y_test)
 print("test筆數",counter)
 

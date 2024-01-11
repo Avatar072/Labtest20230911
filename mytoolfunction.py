@@ -154,8 +154,8 @@ def ChooseLoadNpArray(filepath, file, Choose_method):
             # y_train = np.load(filepath + "y_train_20231113.npy", allow_pickle=True)
 
             # # 20231220 after do labelencode and minmax
-            x_train = np.load(filepath + "x_train_ToN-IoT_20231220.npy", allow_pickle=True)
-            y_train = np.load(filepath + "y_train_ToN-IoT_20231220.npy", allow_pickle=True)
+            # x_train = np.load(filepath + "x_train_ToN-IoT_20231220.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_ToN-IoT_20231220.npy", allow_pickle=True)
 
             # # 20231220 after PCA do labelencode and minmax
             # x_train = np.load(filepath + "x_train_ToN-IoT_afterPCA_20231220.npy", allow_pickle=True)
@@ -168,6 +168,11 @@ def ChooseLoadNpArray(filepath, file, Choose_method):
             # # # 20231225 CIC-ToN-IoT after do labelencode and minmax 上限取5000
             # x_train = np.load(filepath + "x_train_CIC_ToN-IoT_20231225.npy", allow_pickle=True)
             # y_train = np.load(filepath + "y_train_CIC_ToN-IoT_20231225.npy", allow_pickle=True)
+
+            # # 2024011 after do labelencode and minmax andf_classif
+            x_train = np.load(filepath + "x_train_ToN-IoT_20240111.npy", allow_pickle=True)
+            y_train = np.load(filepath + "y_train_ToN-IoT_20240111.npy", allow_pickle=True)
+
         elif (Choose_method == 'SMOTE'):
             # x_train = np.load(filepath + "x_total_train_SMOTE_ALL_Label.npy", allow_pickle=True)
             # y_train = np.load(filepath + "y_total_train_SMOTE_ALL_Label.npy", allow_pickle=True)
