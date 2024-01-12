@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")#https://blog.csdn.net/qq_43391414/article/deta
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 from sklearn.metrics import confusion_matrix
-from mytoolfunction import generatefolder, ChooseLoadNpArray,ChooseTrainDatastes, ParseCommandLineArgs,ChooseTestDataSet
+from mytoolfunction import generatefolder, ChooseLoadNpArray,ChooseTrainDatastes, ParseCommandLineArgs,ChooseTestDataSet,getStartorEndtime
 from collections import Counter
 ####################################################################################################
 
@@ -48,7 +48,8 @@ today = today.strftime("%Y%m%d")
 generatefolder(f"./single_AnalyseReportFolder/", today)
 generatefolder(f"./single_AnalyseReportFolder/{today}/", client_str)
 generatefolder(f"./single_AnalyseReportFolder/{today}/{client_str}/", Choose_method)
-
+#紀錄開始時間
+getStartorEndtime("starttime",start_IDS,f"./single_AnalyseReportFolder/{today}/{client_str}/{Choose_method}")
 # # 20231220 after do labelencode and minmax
 # x_test = np.load(filepath + "x_test_ToN-IoT_20231220.npy", allow_pickle=True)
 # y_test = np.load(filepath + "y_test_ToN-IoT_20231220.npy", allow_pickle=True)
@@ -66,9 +67,25 @@ generatefolder(f"./single_AnalyseReportFolder/{today}/{client_str}/", Choose_met
 # y_test = np.load(filepath + "y_test_CIC_ToN-IoT_20231225.npy", allow_pickle=True)
 # x_test, y_test = ChooseTestDataSet(filepath)
 
-# 20231220 after do labelencode and minmax
-x_test = np.load(filepath + "x_test_ToN-IoT_20240111.npy", allow_pickle=True)
-y_test = np.load(filepath + "y_test_ToN-IoT_20240111.npy", allow_pickle=True)
+# 20240112 after do labelencode and minmax
+# x_test = np.load(filepath + "x_test_ToN-IoT_20240112.npy", allow_pickle=True)
+# y_test = np.load(filepath + "y_test_ToN-IoT_20240112.npy", allow_pickle=True)
+
+# # 20240112 after do labelencode and minmax and AfterFeatureSelect40
+# x_test = np.load(filepath + "x_test_ToN-IoT_AfterFeatureSelect40_20240112.npy", allow_pickle=True)
+# y_test = np.load(filepath + "y_test_ToN-IoT_AfterFeatureSelect40_20240112.npy", allow_pickle=True)
+
+# # 20240112 after do labelencode and minmax and AfterFeatureSelect30
+# x_test = np.load(filepath + "x_test_ToN-IoT_AfterFeatureSelect30_20240112.npy", allow_pickle=True)
+# y_test = np.load(filepath + "y_test_ToN-IoT_AfterFeatureSelect30_20240112.npy", allow_pickle=True)
+
+# 20240112 after do labelencode and minmax and AfterFeatureSelect20
+# x_test = np.load(filepath + "x_test_ToN-IoT_AfterFeatureSelect20_20240112.npy", allow_pickle=True)
+# y_test = np.load(filepath + "y_test_ToN-IoT_AfterFeatureSelect20_20240112.npy", allow_pickle=True)
+
+# 20240112 after do labelencode and minmax and AfterFeatureSelect10
+x_test = np.load(filepath + "x_test_ToN-IoT_AfterFeatureSelect10_20240112.npy", allow_pickle=True)
+y_test = np.load(filepath + "y_test_ToN-IoT_AfterFeatureSelect10_20240112.npy", allow_pickle=True)
 
 counter = Counter(y_test)
 print("test筆數",counter)
@@ -276,6 +293,9 @@ net = MLP().to(DEVICE)
 
 # 訓練模型
 train(net, trainloader, epochs=num_epochs)
+#紀錄結束時間
+end_IDS = time.time()
+getStartorEndtime("endtime",end_IDS,f"./single_AnalyseReportFolder/{today}/{client_str}/{Choose_method}")
 
 # 評估模型
 test_accuracy = test(net, testloader, start_IDS, client_str,True)

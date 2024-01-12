@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 column_names = ["principal_Component" + str(i) for i in range(1, 79)] + ["Label"]
 
 ### 獲取開始or結束時間
-def getStartorEndtime(Start_or_End):
+def getStartorEndtime(Start_or_End_Str,Start_or_End,fliepath):
     timestamp = time.time()# 用於獲取當前時間的時間戳，返回一個浮點數
 
     # 將時間戳轉換為日期時間物件
@@ -22,6 +22,10 @@ def getStartorEndtime(Start_or_End):
     formatted_time = dt_object.strftime("%Y-%m-%d %H:%M:%S")
 
     print(f"{Start_or_End}_time: {formatted_time}")
+    # 開啟檔案並寫入開始時間
+    with open(f"{fliepath}/StartTime_and_Endtime.csv", "a+") as file:
+        file.write(f"{Start_or_End_Str}:{str(formatted_time)}\n")
+
     return timestamp, formatted_time
 ### 計算花費時間
 def CalculateTime(end_IDS, start_IDS):
@@ -169,9 +173,25 @@ def ChooseLoadNpArray(filepath, file, Choose_method):
             # x_train = np.load(filepath + "x_train_CIC_ToN-IoT_20231225.npy", allow_pickle=True)
             # y_train = np.load(filepath + "y_train_CIC_ToN-IoT_20231225.npy", allow_pickle=True)
 
-            # # 2024011 after do labelencode and minmax andf_classif
-            x_train = np.load(filepath + "x_train_ToN-IoT_20240111.npy", allow_pickle=True)
-            y_train = np.load(filepath + "y_train_ToN-IoT_20240111.npy", allow_pickle=True)
+            # # 20240112 after do labelencode and minmax
+            # x_train = np.load(filepath + "x_train_ToN-IoT_20240112.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_ToN-IoT_20240112.npy", allow_pickle=True)
+
+            # # # 20240112 after do labelencode and minmax and AfterFeatureSelect40
+            # x_train = np.load(filepath + "x_train_ToN-IoT_AfterFeatureSelect40_20240112.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_ToN-IoT_AfterFeatureSelect40_20240112.npy", allow_pickle=True)
+            # # # 20240112 after do labelencode and minmax and AfterFeatureSelect30
+            # x_train = np.load(filepath + "x_train_ToN-IoT_AfterFeatureSelect30_20240112.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_ToN-IoT_AfterFeatureSelect30_20240112.npy", allow_pickle=True)
+
+            # # # 20240112 after do labelencode and minmax and AfterFeatureSelect20
+            # x_train = np.load(filepath + "x_train_ToN-IoT_AfterFeatureSelect20_20240112.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_ToN-IoT_AfterFeatureSelect20_20240112.npy", allow_pickle=True)
+
+            # # # 20240112 after do labelencode and minmax and AfterFeatureSelect10
+            x_train = np.load(filepath + "x_train_ToN-IoT_AfterFeatureSelect10_20240112.npy", allow_pickle=True)
+            y_train = np.load(filepath + "y_train_ToN-IoT_AfterFeatureSelect10_20240112.npy", allow_pickle=True)
+
 
         elif (Choose_method == 'SMOTE'):
             # x_train = np.load(filepath + "x_total_train_SMOTE_ALL_Label.npy", allow_pickle=True)

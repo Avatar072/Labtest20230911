@@ -169,7 +169,7 @@ else:
 ### extracting features
 #除了type外的特徵
 crop_dataset=afterprocess_dataset.iloc[:,:-1]
-# 列出要排除的列名
+# 列出要排除的列名，這6個以外得特徵做minmax
 columns_to_exclude = ['src_ip', 'src_port', 'dst_ip', 'dst_port', 'proto', 'ts']
 # 使用条件选择不等于这些列名的列
 doScalerdataset = crop_dataset[[col for col in crop_dataset.columns if col not in columns_to_exclude]]
@@ -177,6 +177,7 @@ undoScalerdataset = crop_dataset[[col for col in crop_dataset.columns if col  in
 # print(doScalerdataset.info)
 # print(afterprocess_dataset.info)
 # print(undoScalerdataset.info)
+# 開始minmax
 X=doScalerdataset
 X=X.values
 # scaler = preprocessing.StandardScaler() #資料標準化
@@ -184,101 +185,121 @@ scaler = MinMaxScaler(feature_range=(0, 1)).fit(X)
 scaler.fit(X)
 X=scaler.transform(X)
 
-###################
-# 開始ch2特征选择，先分离特征和目标变量
-y = afterprocess_dataset['type']  # 目标变量
-
-# # 使用 SelectKBest 进行特征选择，选择 k=38 个特征，要跟TONIOT的45個特徵對齊，38+7=45，
-# # 7是扣掉的'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp' 'Label'
-# # chi2 表示使用卡方检验进行评估
-# k_best = SelectKBest(chi2, k=38)
-
-# # 创建 SelectKBest 模型，选择 f_classif 统计测试方法
-# k_best = SelectKBest(score_func=f_classif, k='all')
-
-# X_new = k_best.fit_transform(X, y)
-
-# # 获取被选中的特征的索引
-# selected_feature_indices = k_best.get_support(indices=True)
-
-# # 打印被选中的特征列名
-# selected_features = doScalerdataset.columns[selected_feature_indices]
-# print("Selected Features:")
-# print(selected_features)
-
-# # 打印选择的特征的名称、索引和相应的 F 值、p 值
-# print("\nSelected Feature Statistics:")
-# for idx, feature_idx in enumerate(selected_feature_indices):
-#     feature_name = selected_features[idx]
-#     f_value = k_best.scores_[feature_idx]
-#     p_value = k_best.pvalues_[feature_idx]
-#     # print(f"Feature {idx}: Name = {feature_name}, Index = {feature_idx}, F-value = {f_value}, p-value = {p_value}")
-#     print(f"Name = {feature_name}, F-value = {f_value}, p-value = {p_value}")
-
-# # 将 X_new 转换为 DataFrame
-# X_new_df = pd.DataFrame(X_new, columns=selected_features)
-
-# # 将选中的特征和 Label 合并为新的 DataFrame
-# selected_data = pd.concat([X_new_df, afterprocess_dataset['type']], axis=1)
-
 # 将排除的列名和选中的特征和 Label 合并为新的 DataFrame
-# finalDf = pd.concat([undoScalerdataset,selected_data], axis = 1)
-
-# 将排除的列名和选中的特征和 Label 合并为新的 DataFrame
-finalDf = pd.concat([undoScalerdataset,doScalerdataset,afterprocess_dataset['type']], axis = 1)
-# finalDf.to_csv("./")
-SaveDataToCsvfile(finalDf, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", f"train_dataframes_labversion_{today}")
+afterminmax_dataset = pd.concat([undoScalerdataset,doScalerdataset,afterprocess_dataset['type']], axis = 1)
+SaveDataToCsvfile(afterminmax_dataset, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", f"Train_Test_Network_AfterProcessed_minmax{today}")
 print("Original Column Names:")
-print(finalDf.columns.value_counts)
+print(afterminmax_dataset.columns.value_counts)
 
-finalDf = X
-#  创建 SelectKBest 模型，选择 f_classif 统计测试方法
-k_best = SelectKBest(score_func=chi2, k='all')
+def dofeatureSelect(df, slecet_label_counts):
+    if (slecet_label_counts == None):
+        slecet_label_counts ='all'
 
-X_new = k_best.fit_transform(X, y)
+    # 開始ch2特征选择，先分离特征和目标变量
+    y = df['type']  # 目标变量
+    X = df.iloc[:, :-1]  # 特征
 
-# 获取被选中的特征的索引
-selected_feature_indices = k_best.get_support(indices=True)
+    # 创建 SelectKBest 模型，选择 f_classif 统计测试方法
+    k_best = SelectKBest(score_func=chi2, k=slecet_label_counts)
+    X_new = k_best.fit_transform(X, y)
 
-# # 打印被选中的特征列名
-# selected_features = doScalerdataset.columns[selected_feature_indices]
-# print("Selected Features:")
-# print(selected_features)
-# 打印被选中的特征的列名
-selected_features = afterprocess_dataset.columns[selected_feature_indices]
-print("Selected Features:")
-print(selected_features)
+    # 获取被选中的特征的索引
+    selected_feature_indices = k_best.get_support(indices=True)
 
+    # 打印被选中的特征的列名
+    selected_features = X.columns[selected_feature_indices]
+    print("Selected Features:")
+    print(selected_features)
 
+    # 印选择的特征的名称、索引和相应的 F 值、p 值
+    print("\nSelected Feature Statistics:")
+    selected_feature_stats = []
+    for idx, feature_idx in enumerate(selected_feature_indices):
+        feature_name = selected_features[idx]
+        f_value = k_best.scores_[feature_idx]
+        p_value = k_best.pvalues_[feature_idx]
+        print(f"Name = {feature_name}, F-value = {f_value}, p-value = {p_value}")
+        selected_feature_stats.append({
+            'Name': feature_name,
+            'F-value': f_value,
+            'p-value': p_value
+        })
+    print("selected特徵數", len(selected_feature_indices))
 
-# 打印选择的特征的名称、索引和相应的 F 值、p 值
-print("\nSelected Feature Statistics:")
-for idx, feature_idx in enumerate(selected_feature_indices):
-    feature_name = selected_features[idx]
-    f_value = k_best.scores_[feature_idx]
-    p_value = k_best.pvalues_[feature_idx]
-    # print(f"Feature {idx}: Name = {feature_name}, Index = {feature_idx}, F-value = {f_value}, p-value = {p_value}")
-    print(f"Name = {feature_name}, F-value = {f_value}, p-value = {p_value}")
+    # 迴圈遍歷所有特徵，印出相應的統計信息
+    print("\nAll Features Statistics:")
+    all_feature_stats = []
+    for idx, feature_name in enumerate(X.columns):
+        f_value = k_best.scores_[idx]
+        p_value = k_best.pvalues_[idx]
+        print(f"Name = {feature_name}, F-value = {f_value}, p-value = {p_value}")
+        all_feature_stats.append({
+            'Name': feature_name,
+            'F-value': f_value,
+            'p-value': p_value
+        })
+    print("原特徵數", len(X.columns))
 
-# 将 X_new 转换为 DataFrame
-X_new_df = pd.DataFrame(X_new, columns=selected_features)
-# 将选中的特征和 Label 合并为新的 DataFrame
-selected_data = pd.concat([X_new_df, afterprocess_dataset['type']], axis=1)
+    # 將選中特徵的統計信息存儲到 CSV 文件
+    selected_feature_stats_df = pd.DataFrame(selected_feature_stats)
+    all_feature_stats_df = pd.DataFrame(all_feature_stats)
+    SaveDataToCsvfile(selected_feature_stats_df, 
+                      f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doFeatureSelect/{slecet_label_counts}", 
+                      f"selected_feature_stats_{today}")
 
-SaveDataToCsvfile(X_new_df, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", f"X_new_df_{today}")
-SaveDataToCsvfile(selected_data, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", f"X_selected_data_{today}")
+    SaveDataToCsvfile(all_feature_stats_df, 
+                      f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doFeatureSelect/{slecet_label_counts}", 
+                      f"all_feature_stats_{today}")
 
+    # 找出未被選中的特徵
+    unselected_features = set(X.columns) - set(selected_features)
+    print("\nUnselected Features:")
+    print(unselected_features)
 
+    # 將未被選中特徵存儲到 CSV 文件
+    unselected_features_df = pd.DataFrame(list(unselected_features), columns=['Unselected Features'])
+    SaveDataToCsvfile(unselected_features_df, 
+                      f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doFeatureSelect/{slecet_label_counts}", 
+                      f"unselected_features_{today}")
 
+    # 将 X_new 转换为 DataFrame
+    X_new_df = pd.DataFrame(X_new, columns=selected_features)
 
+    # 将选中的特征和 Label 合并为新的 DataFrame
+    selected_data = pd.concat([X_new_df, df['type']], axis=1)
+    
+    SaveDataToCsvfile(selected_data, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doFeatureSelect/{slecet_label_counts}", 
+                      f"AfterSelected_{slecet_label_counts}_feature_data_{today}")
+    return selected_data
 
+def DoSpiltAfterFeatureSelect(df,slecet_label_counts):
+    # ###################
+    # afterminmax_dataset= dofeatureSelect(afterminmax_dataset,None)
+    # afterminmax_dataset= dofeatureSelect(afterminmax_dataset,10)
+    ###################
+    afterFeatureSelected_dataset= dofeatureSelect(df,slecet_label_counts)
+    train_dataframes, test_dataframes = train_test_split(afterFeatureSelected_dataset, test_size=0.2, random_state=42)#test_size=0.2表示将数据集分成测试集的比例为20%
+    label_counts = test_dataframes['type'].value_counts()
+    print("test_dataframes\n", label_counts)
+    label_counts = train_dataframes['type'].value_counts()
+    print("train_dataframes\n", label_counts)
+    SaveDataToCsvfile(train_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}",  
+                      f"train_dataframes_AfterFeatureSelect_{slecet_label_counts}_{today}")
+    SaveDataToCsvfile(test_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", 
+                      f"test_dataframes_AfterFeatureSelect_{slecet_label_counts}_{today}")
+    SaveDataframeTonpArray(test_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", 
+                           f"test_ToN-IoT_AfterFeatureSelect{slecet_label_counts}",today)
+    SaveDataframeTonpArray(train_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", 
+                           f"train_ToN-IoT_AfterFeatureSelect{slecet_label_counts}",today)
 
-
-
-
-
-
-###################
+#選40個特徵
+# afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,40)
+#選30個特徵
+# afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,30)
+#選20個特徵
+# afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,20)
+#選10個特徵
+afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,10)
 ## 重新合並MinMax後的特徵
 # number_of_components=38 # 原45個的特徵，扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type' | 45-7 =38
 # columns_array=[]
@@ -294,28 +315,27 @@ SaveDataToCsvfile(selected_data, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_After
 # afterprocess_dataset=finalDf
 
 # train_dataframes, test_dataframes = train_test_split(afterprocess_dataset, test_size=0.2, random_state=42)#test_size=0.2表示将数据集分成测试集的比例为20%
-# train_dataframes, test_dataframes = train_test_split(selected_data, test_size=0.2, random_state=42)#test_size=0.2表示将数据集分成测试集的比例为20%
 
 
 
-# # train_dataframes = clearDirtyData(train_dataframes)
-# # test_dataframes = clearDirtyData(test_dataframes)
+# train_dataframes = clearDirtyData(train_dataframes)
+# test_dataframes = clearDirtyData(test_dataframes)
 # label_counts = test_dataframes['type'].value_counts()
 # print("test_dataframes\n", label_counts)
 # label_counts = train_dataframes['type'].value_counts()
 # print("train_dataframes\n", label_counts)
 
-# # # split train_dataframes各一半
-# # train_half1,train_half2 = splitdatasetbalancehalf(train_dataframes,'type')
+# # split train_dataframes各一半
+# train_half1,train_half2 = splitdatasetbalancehalf(train_dataframes,'type')
 
-# # # 找到train_df_half1和train_df_half2中重复的行
-# # duplicates = train_half2[train_half2.duplicated(keep=False)]
+# # 找到train_df_half1和train_df_half2中重复的行
+# duplicates = train_half2[train_half2.duplicated(keep=False)]
 
-# # # 删除train_df_half2中与train_df_half1重复的行
-# # train_df_half2 = train_half2[~train_half2.duplicated(keep=False)]
+# # 删除train_df_half2中与train_df_half1重复的行
+# train_df_half2 = train_half2[~train_half2.duplicated(keep=False)]
 
-# # # train_df_half1和train_df_half2 detail information
-# # printFeatureCountAndLabelCountInfo(train_half1, train_df_half2,'type')
+# # train_df_half1和train_df_half2 detail information
+# printFeatureCountAndLabelCountInfo(train_half1, train_df_half2,'type')
 
 
 
@@ -327,5 +347,5 @@ SaveDataToCsvfile(selected_data, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_After
 # # # test_dataframes.to_csv(filepath + "\\dataset_AfterProcessed\\Train_Test_Network_AfterProcessed_updated_test_dataframes.csv", index=False)
 # SaveDataframeTonpArray(test_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", "test_ToN-IoT",today)
 # SaveDataframeTonpArray(train_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", "train_ToN-IoT",today)
-# # SaveDataframeTonpArray(train_half1, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", "train_half1_ToN-IoT", today)
-# # SaveDataframeTonpArray(train_half2, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", "train_half2_ToN-IoT", today)
+# SaveDataframeTonpArray(train_half1, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", "train_half1_ToN-IoT", today)
+# SaveDataframeTonpArray(train_half2, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", "train_half2_ToN-IoT", today)
