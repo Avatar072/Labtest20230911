@@ -192,6 +192,7 @@ print("Original Column Names:")
 print(afterminmax_dataset.columns.value_counts)
 
 def dofeatureSelect(df, slecet_label_counts):
+    significance_level=0.05
     if (slecet_label_counts == None):
         slecet_label_counts ='all'
 
@@ -224,6 +225,12 @@ def dofeatureSelect(df, slecet_label_counts):
             'F-value': f_value,
             'p-value': p_value
         })
+        # 判斷 p-值 是否小於显著性水準
+        if p_value <= significance_level:
+            print(f"Feature {feature_name} is statistically significant.")
+        else:
+            print(f"Feature {feature_name} is not statistically significant.")
+
     print("selected特徵數", len(selected_feature_indices))
 
     # 迴圈遍歷所有特徵，印出相應的統計信息
@@ -251,16 +258,38 @@ def dofeatureSelect(df, slecet_label_counts):
                       f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doFeatureSelect/{slecet_label_counts}", 
                       f"all_feature_stats_{today}")
 
-    # 找出未被選中的特徵
-    unselected_features = set(X.columns) - set(selected_features)
-    print("\nUnselected Features:")
-    print(unselected_features)
-
-    # 將未被選中特徵存儲到 CSV 文件
-    unselected_features_df = pd.DataFrame(list(unselected_features), columns=['Unselected Features'])
-    SaveDataToCsvfile(unselected_features_df, 
+    # 将未被选中特徵的統計信息存儲到 CSV 文件
+    unselected_feature_indices = list(set(range(len(X.columns))) - set(selected_feature_indices))
+    unselected_features = X.columns[unselected_feature_indices]
+    unselected_feature_stats = []
+    for idx, feature_idx in enumerate(unselected_feature_indices):
+        feature_name = unselected_features[idx]
+        f_value = k_best.scores_[feature_idx]
+        p_value = k_best.pvalues_[feature_idx]
+        print(f"Unselected Feature - Name = {feature_name}, F-value = {f_value}, p-value = {p_value}")
+        unselected_feature_stats.append({
+            'Name': feature_name,
+            'F-value': f_value,
+            'p-value': p_value
+        })
+    
+    # 將未被選中特徵的統計信息存儲到 CSV 文件
+    unselected_feature_stats_df = pd.DataFrame(unselected_feature_stats)
+    SaveDataToCsvfile(unselected_feature_stats_df, 
                       f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doFeatureSelect/{slecet_label_counts}", 
-                      f"unselected_features_{today}")
+                      f"unselected_feature_stats_{today}")
+    
+    
+    # # 找出未被選中的特徵
+    # unselected_features = set(X.columns) - set(selected_features)
+    # print("\nUnselected Features:")
+    # print(unselected_features)
+
+    # # 將未被選中特徵存儲到 CSV 文件
+    # unselected_features_df = pd.DataFrame(list(unselected_features), columns=['Unselected Features'])
+    # SaveDataToCsvfile(unselected_features_df, 
+    #                   f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doFeatureSelect/{slecet_label_counts}", 
+    #                   f"unselected_features_{today}")
 
     # 将 X_new 转换为 DataFrame
     X_new_df = pd.DataFrame(X_new, columns=selected_features)
@@ -297,9 +326,9 @@ def DoSpiltAfterFeatureSelect(df,slecet_label_counts):
 #選30個特徵
 # afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,30)
 #選20個特徵
-# afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,20)
+afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,20)
 #選10個特徵
-afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,10)
+# afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,10)
 ## 重新合並MinMax後的特徵
 # number_of_components=38 # 原45個的特徵，扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type' | 45-7 =38
 # columns_array=[]
