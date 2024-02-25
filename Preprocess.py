@@ -184,10 +184,20 @@ X=X.values
 scaler = MinMaxScaler(feature_range=(0, 1)).fit(X)
 scaler.fit(X)
 X=scaler.transform(X)
-
+# 将缩放后的值更新到 doScalerdataset 中
+doScalerdataset.iloc[:, :] = X
 # 将排除的列名和选中的特征和 Label 合并为新的 DataFrame
 afterminmax_dataset = pd.concat([undoScalerdataset,doScalerdataset,afterprocess_dataset['type']], axis = 1)
-SaveDataToCsvfile(afterminmax_dataset, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", f"Train_Test_Network_AfterProcessed_minmax{today}")
+# SaveDataToCsvfile(afterminmax_dataset, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", f"Train_Test_Network_AfterProcessed_minmax{today}")
+
+###看檔案是否存在不存在存檔後讀檔
+if(CheckFileExists(filepath + "\\dataset_AfterProcessed\\Train_Test_Network_AfterProcessed_minmax.csv")!=True):
+    SaveDataToCsvfile(afterminmax_dataset, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed", f"Train_Test_Network_AfterProcessed_minmax")
+    afterminmax_dataset = pd.read_csv(filepath + "\\dataset_AfterProcessed\\Train_Test_Network_AfterProcessed_minmax.csv")
+
+else:
+    afterminmax_dataset = pd.read_csv(filepath + "\\dataset_AfterProcessed\\Train_Test_Network_AfterProcessed_minmax.csv")
+
 print("Original Column Names:")
 print(afterminmax_dataset.columns.value_counts)
 
@@ -321,14 +331,68 @@ def DoSpiltAfterFeatureSelect(df,slecet_label_counts):
     SaveDataframeTonpArray(train_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}", 
                            f"train_ToN-IoT_AfterFeatureSelect{slecet_label_counts}",today)
 
+def DoSpiltAfterDoPCA(df,number_of_components):
+    # number_of_components=20
+    
+    crop_dataset=df.iloc[:,:-1]
+    # 列出要排除的列名
+    columns_to_exclude = ['src_ip', 'src_port', 'dst_ip', 'dst_port', 'proto', 'ts']
+    # 使用条件选择不等于这些列名的列
+    # number_of_components=77 # 原84個的特徵，扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp' 'Label' | 84-7 =77
+    doScalerdataset = crop_dataset[[col for col in crop_dataset.columns if col not in columns_to_exclude]]
+    undoScalerdataset = crop_dataset[[col for col in crop_dataset.columns if col  in columns_to_exclude]]
+    # afterminmax_dataset = pd.concat([undoScalerdataset,doScalerdataset,mergecompelete_dataset['Label']], axis = 1)
+
+    print("Original number of features:", len(df.columns) - 1)  # 减去 'type' 列
+    # X = df.drop(columns=['Label'])  # 提取特征，去除 'type' 列
+    X = doScalerdataset
+    pca = PCA(n_components=number_of_components)
+    columns_array=[]
+    for i in range (number_of_components):
+        columns_array.append("principal_Component"+str(i+1))
+        
+    principalComponents = pca.fit_transform(X)
+    principalDf = pd.DataFrame(data = principalComponents
+                , columns = columns_array)
+
+    finalDf = pd.concat([undoScalerdataset,principalDf, df[['type']]], axis = 1)
+    df=finalDf
+
+    SaveDataToCsvfile(df, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doPCA/{number_of_components}", f"Train_Test_Network_AfterProcessed_minmax_PCA")
+
+    train_dataframes, test_dataframes = train_test_split(df, test_size=0.2, random_state=42)#test_size=0.2表示将数据集分成测试集的比例为20%
+    # printFeatureCountAndLabelCountInfo(train_dataframes, test_dataframes)
+    
+    label_counts = test_dataframes['type'].value_counts()
+    print("test_dataframes\n", label_counts)
+    label_counts = train_dataframes['type'].value_counts()
+    print("train_dataframes\n", label_counts)
+
+    SaveDataToCsvfile(train_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doPCA/{number_of_components}", f"train_dataframes_AfterPCA{number_of_components}_{today}")
+    SaveDataToCsvfile(test_dataframes,  f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doPCA/{number_of_components}", f"test_dataframes_AfterPCA{number_of_components}_{today}")
+    SaveDataframeTonpArray(test_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doPCA/{number_of_components}", f"test_AfterPCA{number_of_components}",today)
+    SaveDataframeTonpArray(train_dataframes, f"./TON_IoT Datasets/UNSW-ToN-IoT/dataset_AfterProcessed/{today}/doPCA/{number_of_components}", f"train_AfterPCA{number_of_components}",today)
+
+
 #選40個特徵
 # afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,40)
 #選30個特徵
 # afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,30)
 #選20個特徵
-afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,20)
+# afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,20)
 #選10個特徵
 # afterminmax_dataset = DoSpiltAfterFeatureSelect(afterminmax_dataset,10)
+
+# PCA選38個特徵 總45特徵=38+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+# DoSpiltAfterDoPCA(afterminmax_dataset,38)
+# PCA選33個特徵 總40特徵=33+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+# DoSpiltAfterDoPCA(afterminmax_dataset,33)
+# # PCA選23個特徵 總30特徵=23+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+# DoSpiltAfterDoPCA(afterminmax_dataset,23)
+# # PCA選13個特徵 總20特徵=23+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+# DoSpiltAfterDoPCA(afterminmax_dataset,13)
+# # PCA選3個特徵 總10特徵=3+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+DoSpiltAfterDoPCA(afterminmax_dataset,3)
 ## 重新合並MinMax後的特徵
 # number_of_components=38 # 原45個的特徵，扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type' | 45-7 =38
 # columns_array=[]

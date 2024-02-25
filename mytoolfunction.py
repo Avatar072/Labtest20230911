@@ -189,9 +189,23 @@ def ChooseLoadNpArray(filepath, file, Choose_method):
             # y_train = np.load(filepath + "y_train_ToN-IoT_AfterFeatureSelect20_20240112.npy", allow_pickle=True)
 
             # # # 20240112 after do labelencode and minmax and AfterFeatureSelect10
-            x_train = np.load(filepath + "x_train_ToN-IoT_AfterFeatureSelect10_20240112.npy", allow_pickle=True)
-            y_train = np.load(filepath + "y_train_ToN-IoT_AfterFeatureSelect10_20240112.npy", allow_pickle=True)
-
+            # x_train = np.load(filepath + "x_train_ToN-IoT_AfterFeatureSelect10_20240112.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_ToN-IoT_AfterFeatureSelect10_20240112.npy", allow_pickle=True)
+            # PCA選38個特徵 總45特徵=38+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+            # x_train = np.load(filepath + "x_train_AfterPCA38_20240125.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_AfterPCA38_20240125.npy", allow_pickle=True)
+            # # PCA選33個特徵 總40特徵=33+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+            # x_train = np.load(filepath + "x_train_AfterPCA33_20240125.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_AfterPCA33_20240125.npy", allow_pickle=True)
+            # # # PCA選23個特徵 總30特徵=23+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+            # x_train = np.load(filepath + "x_train_AfterPCA23_20240125.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_AfterPCA23_20240125.npy", allow_pickle=True)
+            # # # PCA選13個特徵 總20特徵=23+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+            # x_train = np.load(filepath + "x_train_AfterPCA23_20240125.npy", allow_pickle=True)
+            # y_train = np.load(filepath + "y_train_AfterPCA23_20240125.npy", allow_pickle=True)
+            # # # PCA選3個特徵 總10特徵=3+扣掉'SourceIP', 'SourcePort', 'DestinationIP', 'DestinationPort', 'Protocol', 'Timestamp', 'type'
+            x_train = np.load(filepath + "x_train_AfterPCA3_20240125.npy", allow_pickle=True)
+            y_train = np.load(filepath + "y_train_AfterPCA3_20240125.npy", allow_pickle=True)
 
         elif (Choose_method == 'SMOTE'):
             # x_train = np.load(filepath + "x_total_train_SMOTE_ALL_Label.npy", allow_pickle=True)
